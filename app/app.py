@@ -1,29 +1,43 @@
+import os
+import logging
 import chainlit as cl
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import StrOutputParser
 from langchain.chains import LLMChain
+from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the API key
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 @cl.on_chat_start
 async def on_chat_start():
+    logging.debug("on_chat_start triggered")
     ##########################################################################
     # Exercise 1a:
     # Our Chainlit app should initialize the LLM chat via Langchain at the
     # start of a chat session.
-    # 
+    #
     # First, we need to choose an LLM from OpenAI's list of models. Remember
     # to set streaming=True for streaming tokens
     ##########################################################################
     model = ChatOpenAI(
-        model="gpt-3.5-turbo-16k-0613",
-        streaming=True
+        model="gpt-3.5-turbo",
+        streaming=True,
+        openai_api_key=openai_api_key
     )
 
     ##########################################################################
     # Exercise 1b:
     # Next, we will need to set the prompt template for chat. Prompt templates
     # is how we set prompts and then inject informations into the prompt.
-    # 
+    #
     # Please create the prompt template using ChatPromptTemplate. Use variable
     # name "question" as the variable in the template.
     # Refer to the documentation listed in the README.md file for reference.
@@ -51,17 +65,23 @@ async def on_chat_start():
     # We are saving the chain in user_session, so we do not have to rebuild
     # it every single time.
     cl.user_session.set("chain", chain)
+    logging.debug("Chain set in user_session")
 
 
 @cl.on_message
 async def main(message: cl.Message):
+    logging.debug("on_message triggered")
 
     # Let's load the chain from user_session
     chain = cl.user_session.get("chain")  # type: LLMChain
+    if chain is None:
+        logging.error("Chain is None. It was not set in user_session.")
+        await cl.Message(content="Error: Chain not initialized.").send()
+        return
 
     ##########################################################################
     # Exercise 1d:
-    # Everytime we receive a new user message, we will get the chain from 
+    # Everytime we receive a new user message, we will get the chain from
     # user_session. We will run the chain with user's question and return LLM
     # response to the user.
     ##########################################################################
@@ -70,4 +90,3 @@ async def main(message: cl.Message):
     )
 
     await cl.Message(content=response).send()
-
