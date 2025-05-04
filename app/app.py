@@ -1,5 +1,12 @@
+"""Chainlit app to demonstrate Langchain with OpenAI's LLMs.
+This app is designed to be run with Chainlit, a framework for building
+interactive applications using Langchain and OpenAI's LLMs.
+The app initializes a chat session with an LLM, sets up a prompt template,
+and processes user messages to generate responses using the LLM.
+"""
+# app.py
+
 import os
-import logging
 import chainlit as cl
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
@@ -7,18 +14,33 @@ from langchain.schema import StrOutputParser
 from langchain.chains import LLMChain
 from dotenv import load_dotenv
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-
 # Load environment variables from .env file
 load_dotenv()
 
 # Access the API key
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
+"""Set up the models and prompt templates for the Chainlit app.
+This function is called when the chat session starts.
+It initializes the LLM, sets up the prompt template, and creates a chain
+to process user messages.
+The function is decorated with @cl.on_chat_start to indicate that it
+should be called when a new chat session begins.
+The function uses the ChatOpenAI model from Langchain to create a chat
+session with OpenAI's LLM.
+The prompt template is created using the ChatPromptTemplate class,
+which allows for dynamic injection of user input into the prompt.
+The LLMChain class is used to create a chain that processes user messages
+and generates responses using the LLM.
+The function also sets up a callback handler to stream the LLM's
+responses back to the user in real-time.
+The function is decorated with @cl.on_message to indicate that it
+should be called when a new message is received in the chat session.
+The function uses the LangchainCallbackHandler to handle the streaming
+responses from the LLM and send them back to the user.
+"""
 @cl.on_chat_start
 async def on_chat_start():
-    logging.debug("on_chat_start triggered")
     ##########################################################################
     # Exercise 1a:
     # Our Chainlit app should initialize the LLM chat via Langchain at the
@@ -65,17 +87,14 @@ async def on_chat_start():
     # We are saving the chain in user_session, so we do not have to rebuild
     # it every single time.
     cl.user_session.set("chain", chain)
-    logging.debug("Chain set in user_session")
 
 
 @cl.on_message
 async def main(message: cl.Message):
-    logging.debug("on_message triggered")
 
     # Let's load the chain from user_session
     chain = cl.user_session.get("chain")  # type: LLMChain
     if chain is None:
-        logging.error("Chain is None. It was not set in user_session.")
         await cl.Message(content="Error: Chain not initialized.").send()
         return
 
