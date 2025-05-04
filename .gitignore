@@ -3,6 +3,7 @@
 
 # Chainlit
 .chainlit/.langchain.db
+.chainlit/translations/*.json
 
 # Chroma
 .chromadb/
