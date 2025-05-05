@@ -1,9 +1,31 @@
-# Specify Python package requirements for your project here (e.g., Mako==1.1.1). If your project doesn't require these, you can leave this file unchanged or delete it.
-openai==1.2.3
-langchain==0.0.334
-chainlit==0.7.700
-tiktoken==0.5.1
+#-----------------------------------------------------------
+# today is: ~May 2025
+# these examples are: ~Nov 2023
+# changes needed to get working:
+#  - use pyenv to install python and create virtuals
+#  - use python version 3.11.11
+#  - add explicit httpx==0.27.2 to prevent incorrect conflict resolution with langchain
+#  - comment-out pysqlite3_binary - doesn't seem to be used yet - couldn't get it to work
+#  - add python-dotenv and implement it in app.py for the api key to avoid the export method
+#  - upgrade the model param of 'ChatOpenAI' from 'model=gpt-3.4-turbo-0613' to
+#    'model=gpt-3.5-turbo'
+#-----------------------------------------------------------
+
+# Core dependencies
+python-dotenv==1.1.0
 pdfplumber==0.10.3
+
+# LangChain and related dependencies
+httpx==0.27.2
+openai==1.2.3 # we had to upgrade the model from 'gpt-3.4-turbo-0613' to 'gpt-3.5-turbo'
+langchain==0.0.334
 chromadb==0.4.17
-pysqlite3-binary==0.5.2.post1
-ruff==0.1.5
+tiktoken==0.5.1
+
+# Chainlit for UI
+chainlit==0.7.501
+
+# can't get pysqlite3-binary==0.5.2.post1 to install with pip
+# even fails using local wheel
+# pysqlite3-binary==0.5.2.post1
+# ./pysqlite3_binary-0.5.2.post1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl

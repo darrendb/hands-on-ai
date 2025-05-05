@@ -1,3 +1,12 @@
+"""Chainlit app to demonstrate Langchain with OpenAI's LLMs.
+This app is designed to be run with Chainlit, a framework for building
+interactive applications using Langchain and OpenAI's LLMs.
+The app initializes a chat session with an LLM, sets up a prompt template,
+and processes user messages to generate responses using the LLM.
+"""
+# app.py
+
+import os
 from tempfile import NamedTemporaryFile
 from typing import List
 
@@ -11,6 +20,13 @@ from langchain.chains import LLMChain
 from langchain.document_loaders import PDFPlumberLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access the API key
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 def process_file(*, file: AskFileResponse) -> List[Document]:
     """Processes one PDF file from a Chainlit AskFileResponse object by first
@@ -43,8 +59,8 @@ def process_file(*, file: AskFileResponse) -> List[Document]:
         # Langchain to load the file.
         # NOTE: https://python.langchain.com/docs/modules/data_connection/document_loaders/pdf#using-pdfplumber
         ######################################################################
-        loader = ...
-        documents = ...
+        loader = PDFPlumberLoader(tempfile.name)
+        documents = loader.load()
         ######################################################################
 
         ######################################################################
@@ -54,8 +70,11 @@ def process_file(*, file: AskFileResponse) -> List[Document]:
         # to chunk the file.
         # NOTE: https://python.langchain.com/docs/modules/data_connection/text_splitter#using-recursivecharactertextsplitter
         ######################################################################
-        text_splitter = ...
-        docs = ...
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=3000,
+            chunk_overlap=100
+        )
+        docs = text_splitter.split_documents(documents)
         ######################################################################
 
         # We are adding source_id into the metadata here to denote which
@@ -82,7 +101,11 @@ async def on_chat_start():
     ######################################################################
     files = None
     while files is None:
-        files = await ...
+        files = await cl.AskFileMessage(
+            content="Please upload the PDF file you want to ask questions against.",
+            accept=["application/pdf"],
+            max_size_mb=10,
+        ).send()
     file = files[0]
     ######################################################################
 
@@ -95,7 +118,11 @@ async def on_chat_start():
     msg.content = f"`{file.name}` processed. Loading ..."
     await msg.update()
 
-    model = ChatOpenAI(model="gpt-3.5-turbo-16k-0613", streaming=True)
+    model = ChatOpenAI(
+        model="gpt-3.5-turbo",
+        streaming=True,
+        openai_api_key=openai_api_key
+    )
 
     prompt = ChatPromptTemplate.from_messages(
         [
